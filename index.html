@@ -1,0 +1,246 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>IVHM</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content="" />
+		<meta name="keywords" content="" />
+		<!--[if lte IE 8]><script src="css/ie/html5shiv.js"></script><![endif]-->
+		<link rel="stylesheet" href="css/style.css" />
+		<!--[if lte IE 9]><link rel="stylesheet" href="css/ie/v9.css" /><![endif]-->
+		<!--[if lte IE 8]><link rel="stylesheet" href="css/ie/v8.css" /><![endif]-->
+	</head>
+	<body class="landing">
+		<!-- Page Wrapper -->
+			<div id="page-wrapper">
+
+				<!-- Banner -->
+					<section id="banner">
+						<div class="inner">
+							<h2>Dialogue Homme-Machine</h2>
+							<p>Projet IVHM par :<br/>
+							Tony Hennequin, Matthieu Biache,<br/>
+							Kevin Boeuf et Jean-Michel Nokaya<br/>
+							<p><br/>
+							<blockquote id="blockquoteID" class="6u 12u$">
+								<input type="text"  id="questionID" style="resize:none;" name="demo-message"  placeholder="Entrez votre question" />
+							</blockquote>
+							<div class="row uniform">
+								<div class="6u 12u$(xsmall)">
+									<a id="envoyerID" class="button special icon fa-arrow-right">Envoyer</a>
+								</div>
+							</div>
+							<article>
+								<section class="wrapper style2">
+									<p id="info"  class="6u 12u$(xsmall)"> </p>
+									<div id="contentDiv" class="6u$ 12u$(xsmall)"></div>
+								</section>
+							</article>
+						</div>
+					</section>
+			</div>
+
+		<!-- Scripts -->
+			<script src="js/jquery.min.js"></script>
+			<script src="js/jquery.color.js"></script>  
+			<script src="js/jquery.scrollex.min.js"></script>
+			<script src="js/jquery.scrolly.min.js"></script>
+			<script src="js/skel.min.js"></script>
+			<script src="js/init.js"></script>
+			<script>
+
+			$('#questionID').bind('input propertychange', function() {
+				$('#blockquoteID').stop();
+				$('#blockquoteID').css("border-color","#21b2a6");
+				$('#blockquoteID').animate({'borderColor':'white'},'slow');
+			});
+
+			var a=document.getElementById('questionID'), 
+				b=document.getElementById('envoyerID');
+
+	
+			a.onkeydown = function(event) {
+				if (event.keyCode == 13) {
+					request();
+				}
+			}
+
+			b.onclick = function() {
+				request();
+			}
+
+			function processError(err) {
+				var container="<tr>";
+				container+=extract(err,"msg");
+				container+=extract(err,"fromy");
+				container+=extract(err,"fromx");
+				container+=extract(err,"toy");
+				container+=extract(err,"tox");
+				container+=extract(err,"ruleId");
+				container+=extract(err,"subId");
+				container+=extract(err,"replacements");
+				container+=extract(err,"context");
+				container+=extract(err,"contextoffset");
+				container+=extract(err,"offset");
+				container+=extract(err,"errorlength");
+				container+=extract(err,"url");
+				container+=extract(err,"category");
+				container+=extract(err,"locqualityissuetype");
+				container+="</tr>";
+				return container;
+											
+			}
+
+			function extract(err,val){
+				if(err[val]) {
+					return ("<td>"+err[val]+"</td>");
+				} else {
+					return  ("<td></td>");
+				}
+			}
+
+			function request() {
+				var phrase=a.value,
+					url='https://languagetool.org:8081/?language=fr&disabled=FRENCH_WHITESPACE&text='+phrase,
+					colorValue="#4BFF18";
+				$("#contentDiv").html("");
+				$.ajax(url,{
+					type: 'GET',
+					dataType: 'xml',
+					success: function(data){
+						var json=xmlToJson(data);
+						if(typeof json["matches"]["error"] == 'undefined') {
+							a.value="";
+							//$("#contentDiv").html(phrase);
+							$("#info").text('Phase 1 success');
+
+							request2(phrase);
+						} else {
+							var errors = json["matches"]["error"];
+							var arrayLength = errors.length;
+							var htmlvalue="<div class='table-wrapper'><table><thead><tr><th>msg</th><th>fromy</th><th>fromx</th><th>toy</th><th>tox</th><th>ruleId</th><th>subId</th><th>replacements</th><th>context</th><th>contextoffset</th><th>offset</th><th>errorlength</th><th>url</th><th>category</th><th>locqualityissuetype</th></tr></thead><tbody>";
+							if(errors.length>1) {
+								for (var i = 0; i < arrayLength; i++) {
+									htmlvalue+=processError(errors[i]["@attributes"]);
+								}
+							} else {
+								htmlvalue+=processError(errors["@attributes"]);
+							}
+							htmlvalue+="</tbody></table></div>";
+							$("#contentDiv").html(htmlvalue);
+							colorValue="orange";
+							$("#info").html('Phase 1 failed');
+						}
+						
+					},
+					error: function (request, status, err) {
+						colorValue="red";
+						$("#info").html('Phase 1 failed');
+					},
+					complete: function () {
+						blockquoteAnimation(colorValue);
+						infoAnimation('#info',colorValue);
+					}
+				});
+			}
+
+			function request2(phrase){
+				request3(phrase);
+			}
+
+			function request3(phrase){
+				var url='https://api.dandelion.eu/datatxt/nex/v1/?lang=fr&text='+phrase+'&$app_id=f58ea0a1&$app_key=e4295dc8994ffe1ac73aba408cd931c4',
+					colorValue="#4BFF18";
+				$.ajax(url,{
+					type: 'GET',
+					dataType: 'json',
+					success: function(data){
+						console.log(data);
+						$("#info").html($("#info").html()+'<br>Phase 3 success');
+						
+						var arrayLength=data["annotations"]["length"],
+							htmlvalue="<b>Label :<b><br>";
+						for (var i = 0; i < arrayLength; i++) {
+							htmlvalue+=data["annotations"][i]["label"]+"<br>";
+						}
+						$("#contentDiv").html(htmlvalue);
+					},
+					error: function (request, status, err) {
+						colorValue="red";
+						$("#info").html($("#info").html()+'<br>Phase 3 failed');
+					},
+					complete: function() {
+						blockquoteAnimation(colorValue);
+						infoAnimation('#info',colorValue);
+					}
+				});
+
+			}
+	
+			function blockquoteAnimation(colorValue) {
+				$('#blockquoteID').stop();
+				$('#blockquoteID').css("border-color",colorValue);
+				$('#blockquoteID').animate({'borderColor':'white'},2000);
+			}
+
+			function infoAnimation(infoId,colorValue) {
+				$(infoId).stop();
+				$(infoId).css("color",colorValue);
+				$(infoId).animate({'color':'black'},3000, function() {
+					$(infoId).text(".");
+				});
+			}
+
+			function xmlToString(xml){
+				if (xml.xml) {
+					return xml.xml;
+				} else if (XMLSerializer) {
+					var xml_serializer = new XMLSerializer();
+					return xml_serializer.serializeToString(xml);
+				} else {
+					alert("ERROR: Extremely old browser");
+					return "";
+				}
+			}
+
+			function xmlToJson(xml) {
+				// Create the return object
+				var obj = {};
+
+				if (xml.nodeType == 1) { // element
+					// do attributes
+					if (xml.attributes.length > 0) {
+					obj["@attributes"] = {};
+						for (var j = 0; j < xml.attributes.length; j++) {
+							var attribute = xml.attributes.item(j);
+							obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
+						}
+					}
+				} else if (xml.nodeType == 3) { // text
+					obj = xml.nodeValue;
+				}
+
+				// do children
+				if (xml.hasChildNodes()) {
+					for(var i = 0; i < xml.childNodes.length; i++) {
+						var item = xml.childNodes.item(i);
+						var nodeName = item.nodeName;
+						if (typeof(obj[nodeName]) == "undefined") {
+							obj[nodeName] = xmlToJson(item);
+						} else {
+							if (typeof(obj[nodeName].push) == "undefined") {
+								var old = obj[nodeName];
+								obj[nodeName] = [];
+								obj[nodeName].push(old);
+							}
+							obj[nodeName].push(xmlToJson(item));
+						}
+					}
+				}
+				return obj;
+			}
+
+			</script>
+	</body>
+</html>

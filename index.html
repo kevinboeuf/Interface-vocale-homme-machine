@@ -59,7 +59,7 @@
 			var a=document.getElementById('questionID'), 
 				b=document.getElementById('envoyerID');
 
-	
+			//Lorsqu'on appuie sur entrée
 			a.onkeydown = function(event) {
 				if (event.keyCode == 13) {
 					request();
@@ -70,6 +70,7 @@
 				request();
 			}
 
+			//Afficher les informations des erreurs dans un tableau, dans une string
 			function processError(err) {
 				var container="<tr>";
 				container+=extract(err,"msg");
@@ -92,6 +93,7 @@
 											
 			}
 
+			//Afficher les erreurs de fautes de frappe
 			function extract(err,val){
 				if(err[val]) {
 					return ("<td>"+err[val]+"</td>");
@@ -100,6 +102,7 @@
 				}
 			}
 
+			//Analyse syntaxique de la requete
 			function request() {
 				var phrase=a.value,
 					url='https://languagetool.org:8081/?language=fr&disabled=FRENCH_WHITESPACE&text='+phrase,
@@ -145,10 +148,67 @@
 				});
 			}
 
+			//Parser les mots clés des questions et en extraire le but
 			function request2(phrase){
-				request3(phrase);
+				var partsArray = phrase.toLowerCase().split(' ');
+				console.log(partsArray);
+				var colorValue="#4BFF18"
+				for (word in partsArray){
+					switch (partsArray[word]){
+						case "où" :
+							$("#info").html($("#info").html()+'<br>lieu');
+							break;
+						case "qui" :
+							$("#info").html($("#info").html()+'<br>quelqu\'un');
+							break;
+						case "quoi" :
+							$("#info").html($("#info").html()+'<br>quelque chose');
+							break;
+						case "est-ce-que" :
+							$("#info").html($("#info").html()+'<br>aucune idée');
+							break;
+						case "que" :
+							$("#info").html($("#info").html()+'<br>aucune idée');
+							break;
+						case "d'ou" :
+							$("#info").html($("#info").html()+'<br>lieu');
+							break;
+						case "quand" :
+							$("#info").html($("#info").html()+'<br>date');
+							break;
+						case "comment" :
+							$("#info").html($("#info").html()+'<br>comment');
+							break;
+						case "pourquoi" :
+							$("#info").html($("#info").html()+'<br>raison');
+							break;
+						case "quel" :
+							$("#info").html($("#info").html()+'<br>sujet singulier et masculin');
+							break;
+						case "quelle" :
+							$("#info").html($("#info").html()+'<br>sujet singulier et féminin');
+							break;
+						case "quels" :
+							$("#info").html($("#info").html()+'<br>sujet pluriel et masculin');
+							break;
+						case "quelles" :
+							$("#info").html($("#info").html()+'<br>sujet pluriel et féminin');
+							break;
+						case "combien" :
+							$("#info").html($("#info").html()+'<br>nombre');
+							break;
+						default :
+							colorValue="red";
+							break;
+					}
+					blockquoteAnimation(colorValue);
+					infoAnimation('#info',colorValue);
+					colorValue="#4BFF18";
+				}
+				//request3(phrase);
 			}
 
+			//Extraction des noms propres dans la requête
 			function request3(phrase){
 				var url='https://api.dandelion.eu/datatxt/nex/v1/?lang=fr&text='+phrase+'&$app_id=f58ea0a1&$app_key=e4295dc8994ffe1ac73aba408cd931c4',
 					colorValue="#4BFF18";

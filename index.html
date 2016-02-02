@@ -30,14 +30,17 @@
 								<div class="6u 12u$(xsmall)">
 									<a id="envoyerID" class="button special icon fa-arrow-right">Envoyer</a>
 								</div>
+								<p id="info"  class="6u$ 12u$(xsmall)"> </p>
 							</div>
-							<article>
-								<section class="wrapper style2">
-									<p id="info"  class="6u 12u$(xsmall)"> </p>
-									<div id="contentDiv" class="6u$ 12u$(xsmall)"></div>
-								</section>
-							</article>
+							<div id="contentDiv" ></div>
+							<div class="row uniform">
+								<div id="dialogQuestionDiv" class="6u 12u$(xsmall)"></div>
+								<div id="dialogResponseDiv" class="6u$ 12u$(xsmall)"></div>
+							</div>
 						</div>
+					</section>
+					<section class="wrapper style2">
+						
 					</section>
 			</div>
 
@@ -105,6 +108,7 @@
 					url='https://languagetool.org:8081/?language=fr&disabled=FRENCH_WHITESPACE&text='+phrase,
 					colorValue="#4BFF18";
 				$("#contentDiv").html("");
+				$("#dialogDiv").html("");
 				$.ajax(url,{
 					type: 'GET',
 					dataType: 'xml',
@@ -113,7 +117,7 @@
 						if(typeof json["matches"]["error"] == 'undefined') {
 							a.value="";
 							//$("#contentDiv").html(phrase);
-							$("#info").text('Phase 1 success');
+							$("#info").text('Phase 1 success : No syntax Error');
 
 							request2(phrase);
 						} else {
@@ -130,13 +134,13 @@
 							htmlvalue+="</tbody></table></div>";
 							$("#contentDiv").html(htmlvalue);
 							colorValue="orange";
-							$("#info").html('Phase 1 failed');
+							$("#info").html('Phase 1 failed : Syntax Error');
 						}
 						
 					},
 					error: function (request, status, err) {
 						colorValue="red";
-						$("#info").html('Phase 1 failed');
+						$("#info").html('Phase 1 failed : Language Tool Api Not Available');
 					},
 					complete: function () {
 						blockquoteAnimation(colorValue);
@@ -157,18 +161,32 @@
 					dataType: 'json',
 					success: function(data){
 						console.log(data);
-						$("#info").html($("#info").html()+'<br>Phase 3 success');
+						
 						
 						var arrayLength=data["annotations"]["length"],
-							htmlvalue="<b>Label :<b><br>";
-						for (var i = 0; i < arrayLength; i++) {
-							htmlvalue+=data["annotations"][i]["label"]+"<br>";
+							//htmlvalue="",
+							label,resourceLabel;
+						if(arrayLength==1) {
+							//htmlvalue="<b>Label :<b><br>";
+							for (var i = 0; i < arrayLength; i++) {
+								label=data["annotations"][i]["label"];
+								resourceLabel=data["annotations"][i]["uri"].split("/").splice(-1);
+								//htmlvalue+=label+"<br>";
+		
+							}
+
+							//$("#contentDiv").html(htmlvalue);
+							$("#info").html($("#info").html()+'<br>Phase 3 success : <i>'+label+ '</i> detected');
+
+							request4(phrase,"birthDate",resourceLabel);
+						} else {
+							colorValue="orange";
+							$("#info").html($("#info").html()+'<br>Phase 3 failed : '+arrayLength+' entit'+(arrayLength==0?'y':'ies'));
 						}
-						$("#contentDiv").html(htmlvalue);
 					},
 					error: function (request, status, err) {
 						colorValue="red";
-						$("#info").html($("#info").html()+'<br>Phase 3 failed');
+						$("#info").html($("#info").html()+'<br>Phase 3 failed : Dandelion Api Not Available');
 					},
 					complete: function() {
 						blockquoteAnimation(colorValue);
@@ -177,6 +195,33 @@
 				});
 
 			}
+
+			//
+			function request4(phrase,propertyName,resourceLabel){
+				var url='http://fr.dbpedia.org/sparql?query=select distinct ?'+propertyName+' where {<http://fr.dbpedia.org/resource/'+resourceLabel+'> dbpedia-owl:'+propertyName+' ?'+propertyName+'} LIMIT 100&format=HTML',
+					colorValue="#4BFF18";
+				$.ajax(url,{
+					type: 'GET',
+					dataType: 'HTML',
+					success: function(data){
+						console.log(data);
+						phrase
+						$("#dialogQuestionDiv").html(phrase);
+						$("#dialogResponseDiv").html(data);
+						$("#info").html($("#info").html()+'<br>Phase 4 success : Request succeeded');
+					},
+					error: function (request, status, err) {
+						colorValue="red";
+						$("#info").html($("#info").html()+'<br>Phase 4 failed : SPARQL Endpoint Not Available');
+					},
+					complete: function() {
+						blockquoteAnimation(colorValue);
+						infoAnimation('#info',colorValue);
+					}
+				});
+			}
+
+			
 	
 			function blockquoteAnimation(colorValue) {
 				$('#blockquoteID').stop();
@@ -187,7 +232,7 @@
 			function infoAnimation(infoId,colorValue) {
 				$(infoId).stop();
 				$(infoId).css("color",colorValue);
-				$(infoId).animate({'color':'black'},3000, function() {
+				$(infoId).animate({'color':'black'},7000, function() {
 					$(infoId).text(".");
 				});
 			}

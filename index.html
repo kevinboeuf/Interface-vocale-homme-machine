@@ -264,6 +264,7 @@
 						infoAnimation('#info',colorValue);
 						if(colorValue=="#4BFF18") {
 							request4(phrase,"birthDate",resourceLabel);
+							//TODO traitement sur la phrase pour entraire une propertyName
 						}
 					}
 				});
@@ -281,6 +282,7 @@
 						console.log(data);
 						a.value="";
 						$("#dialogQuestionDiv").html('<p style="color:#4BFF18"><i>'+phrase+'</i></hp>');
+						//TODO(plus d'une valeur)
 						$("#dialogResponseDiv").html(data);
 						$("#info").html($("#info").html()+'<br>✓ Phase 4 : Request succeeded');
 					},

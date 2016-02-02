@@ -120,11 +120,8 @@
 					success: function(data){
 						var json=xmlToJson(data);
 						if(typeof json["matches"]["error"] == 'undefined') {
-							a.value="";
 							//$("#contentDiv").html(phrase);
 							$("#info").text('✓ Phase 1 : No syntax Error');
-
-							request2(phrase);
 						} else {
 							var errors = json["matches"]["error"];
 							var arrayLength = errors.length;
@@ -150,6 +147,9 @@
 					complete: function () {
 						blockquoteAnimation(colorValue);
 						infoAnimation('#info',colorValue);
+						if(colorValue=="#4BFF18") {
+							request2(phrase);
+						}
 					}
 				});
 			}
@@ -209,7 +209,7 @@
 							break;
 						default :
 							break;
-					}
+						}
 					}
 				}
 
@@ -230,7 +230,8 @@
 			//Extraction des noms propres dans la requête
 			function request3(phrase){
 				var url='https://api.dandelion.eu/datatxt/nex/v1/?lang=fr&text='+phrase+'&$app_id=f58ea0a1&$app_key=e4295dc8994ffe1ac73aba408cd931c4',
-					colorValue="#4BFF18";
+					colorValue="#4BFF18",
+					label,resourceLabel;
 				$.ajax(url,{
 					type: 'GET',
 					dataType: 'json',
@@ -238,22 +239,17 @@
 						console.log(data);
 						
 						
-						var arrayLength=data["annotations"]["length"],
-							//htmlvalue="",
-							label,resourceLabel;
+						var arrayLength=data["annotations"]["length"];
+							//htmlvalue=""
 						if(arrayLength==1) {
 							//htmlvalue="<b>Label :<b><br>";
 							for (var i = 0; i < arrayLength; i++) {
 								label=data["annotations"][i]["label"];
 								resourceLabel=data["annotations"][i]["uri"].split("/").splice(-1);
 								//htmlvalue+=label+"<br>";
-		
 							}
-
 							//$("#contentDiv").html(htmlvalue);
 							$("#info").html($("#info").html()+'<br>✓ Phase 3 : <i>'+label+ '</i> detected');
-
-							request4(phrase,"birthDate",resourceLabel);
 						} else {
 							colorValue="orange";
 							$("#info").html($("#info").html()+'<br>✗ Phase 3 : '+arrayLength+' entit'+(arrayLength==0?'y':'ies'));
@@ -266,6 +262,9 @@
 					complete: function() {
 						blockquoteAnimation(colorValue);
 						infoAnimation('#info',colorValue);
+						if(colorValue=="#4BFF18") {
+							request4(phrase,"birthDate",resourceLabel);
+						}
 					}
 				});
 
@@ -280,7 +279,7 @@
 					dataType: 'HTML',
 					success: function(data){
 						console.log(data);
-						phrase
+						a.value="";
 						$("#dialogQuestionDiv").html('<p style="color:#4BFF18"><i>'+phrase+'</i></hp>');
 						$("#dialogResponseDiv").html(data);
 						$("#info").html($("#info").html()+'<br>✓ Phase 4 : Request succeeded');

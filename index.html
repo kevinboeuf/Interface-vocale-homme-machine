@@ -110,8 +110,10 @@
 				var phrase=a.value,
 					url='https://languagetool.org:8081/?language=fr&disabled=FRENCH_WHITESPACE&text='+phrase,
 					colorValue="#4BFF18";
+				$('#info').css("float",'right');
 				$("#contentDiv").html("");
-				$("#dialogDiv").html("");
+				$("#dialogQuestionDiv").html("");
+				$("#dialogResponseDiv").html("");
 				$.ajax(url,{
 					type: 'GET',
 					dataType: 'xml',
@@ -120,7 +122,7 @@
 						if(typeof json["matches"]["error"] == 'undefined') {
 							a.value="";
 							//$("#contentDiv").html(phrase);
-							$("#info").text('Phase 1 success : No syntax Error');
+							$("#info").text('✓ Phase 1 : No syntax Error');
 
 							request2(phrase);
 						} else {
@@ -137,13 +139,13 @@
 							htmlvalue+="</tbody></table></div>";
 							$("#contentDiv").html(htmlvalue);
 							colorValue="orange";
-							$("#info").html('Phase 1 failed : Syntax Error');
+							$("#info").html('✗ Phase 1 : Syntax Error');
 						}
 						
 					},
 					error: function (request, status, err) {
 						colorValue="red";
-						$("#info").html('Phase 1 failed : Language Tool Api Not Available');
+						$("#info").html('✗ Phase 1 : Language Tool Api Not Available');
 					},
 					complete: function () {
 						blockquoteAnimation(colorValue);
@@ -156,60 +158,73 @@
 			function request2(phrase){
 				var partsArray = phrase.toLowerCase().split(' ');
 				console.log(partsArray);
-				var colorValue="#4BFF18"
+				var info="",
+					colorValue="#4BFF18";
 				for (word in partsArray){
-					switch (partsArray[word]){
+					if(info!="") {
+						break;
+					} else {
+						switch (partsArray[word]){
 						case "où" :
-							$("#info").html($("#info").html()+'<br>lieu');
+							info='lieu';
 							break;
 						case "qui" :
-							$("#info").html($("#info").html()+'<br>quelqu\'un');
+							info='quelqu\'un';
 							break;
 						case "quoi" :
-							$("#info").html($("#info").html()+'<br>quelque chose');
+							info='quelque chose';
 							break;
 						case "est-ce-que" :
-							$("#info").html($("#info").html()+'<br>aucune idée');
+							info='aucune idée';
 							break;
 						case "que" :
-							$("#info").html($("#info").html()+'<br>aucune idée');
+							info='aucune idée';
 							break;
 						case "d'ou" :
-							$("#info").html($("#info").html()+'<br>lieu');
+							info='lieu';
 							break;
 						case "quand" :
-							$("#info").html($("#info").html()+'<br>date');
+							info='date';
 							break;
 						case "comment" :
-							$("#info").html($("#info").html()+'<br>comment');
+							info='comment';
 							break;
 						case "pourquoi" :
-							$("#info").html($("#info").html()+'<br>raison');
+							info='raison';
 							break;
 						case "quel" :
-							$("#info").html($("#info").html()+'<br>sujet singulier et masculin');
+							info='sujet singulier et masculin';
 							break;
 						case "quelle" :
-							$("#info").html($("#info").html()+'<br>sujet singulier et féminin');
+							info='sujet singulier et féminin';
 							break;
 						case "quels" :
-							$("#info").html($("#info").html()+'<br>sujet pluriel et masculin');
+							info='sujet pluriel et masculin';
 							break;
 						case "quelles" :
-							$("#info").html($("#info").html()+'<br>sujet pluriel et féminin');
+							info='sujet pluriel et féminin';
 							break;
 						case "combien" :
-							$("#info").html($("#info").html()+'<br>nombre');
+							info='nombre';
 							break;
 						default :
-							colorValue="red";
 							break;
 					}
+					}
+				}
+
+				if(info=="") {
+					colorValue="red";
+
+					$("#info").html($("#info").html()+'<br>✗ Phase 2');
 					blockquoteAnimation(colorValue);
 					infoAnimation('#info',colorValue);
-					colorValue="#4BFF18";
+				} else {
+					$("#info").html($("#info").html()+'<br>✓ Phase 2 : <i>'+info+'</i>');
+					blockquoteAnimation(colorValue);
+					infoAnimation('#info',colorValue);
+					request3(phrase);
 				}
-				//request3(phrase);
 			}
 
 			//Extraction des noms propres dans la requête
@@ -236,17 +251,17 @@
 							}
 
 							//$("#contentDiv").html(htmlvalue);
-							$("#info").html($("#info").html()+'<br>Phase 3 success : <i>'+label+ '</i> detected');
+							$("#info").html($("#info").html()+'<br>✓ Phase 3 : <i>'+label+ '</i> detected');
 
 							request4(phrase,"birthDate",resourceLabel);
 						} else {
 							colorValue="orange";
-							$("#info").html($("#info").html()+'<br>Phase 3 failed : '+arrayLength+' entit'+(arrayLength==0?'y':'ies'));
+							$("#info").html($("#info").html()+'<br>✗ Phase 3 : '+arrayLength+' entit'+(arrayLength==0?'y':'ies'));
 						}
 					},
 					error: function (request, status, err) {
 						colorValue="red";
-						$("#info").html($("#info").html()+'<br>Phase 3 failed : Dandelion Api Not Available');
+						$("#info").html($("#info").html()+'<br>✗ Phase 3 : Dandelion Api Not Available');
 					},
 					complete: function() {
 						blockquoteAnimation(colorValue);
@@ -256,7 +271,7 @@
 
 			}
 
-			//
+			//Récupération de l'information utile sur Dbpedia pour la formulation d'une réponse
 			function request4(phrase,propertyName,resourceLabel){
 				var url='http://fr.dbpedia.org/sparql?query=select distinct ?'+propertyName+' where {<http://fr.dbpedia.org/resource/'+resourceLabel+'> dbpedia-owl:'+propertyName+' ?'+propertyName+'} LIMIT 100&format=HTML',
 					colorValue="#4BFF18";
@@ -266,13 +281,13 @@
 					success: function(data){
 						console.log(data);
 						phrase
-						$("#dialogQuestionDiv").html(phrase);
+						$("#dialogQuestionDiv").html('<p style="color:#4BFF18"><i>'+phrase+'</i></hp>');
 						$("#dialogResponseDiv").html(data);
-						$("#info").html($("#info").html()+'<br>Phase 4 success : Request succeeded');
+						$("#info").html($("#info").html()+'<br>✓ Phase 4 : Request succeeded');
 					},
 					error: function (request, status, err) {
 						colorValue="red";
-						$("#info").html($("#info").html()+'<br>Phase 4 failed : SPARQL Endpoint Not Available');
+						$("#info").html($("#info").html()+'<br>✗ Phase 4 : SPARQL Endpoint Not Available');
 					},
 					complete: function() {
 						blockquoteAnimation(colorValue);

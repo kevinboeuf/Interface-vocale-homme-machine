@@ -232,9 +232,7 @@
 					}
 				}*/
 
-				if(lowerCasePhrase.indexOf('qui') > -1) {
-					info="abstract";
-				} else if (lowerCasePhrase.indexOf('quand est né') > -1) {
+				if (lowerCasePhrase.indexOf('quand est né') > -1) {
 					info="birthDate";
 				} else if (lowerCasePhrase.indexOf('où est né') > -1) {
 					info="birthPlace";
@@ -256,6 +254,8 @@
 					if (lowerCasePhrase.indexOf('?') > -1) {
 						info="spouse";
 					}
+				} else if(lowerCasePhrase.indexOf('qui') > -1) {
+					info="abstract";
 				} else if (lowerCasePhrase.indexOf('?') > -1) {
 					info="abstract";
 				} else {

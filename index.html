@@ -114,44 +114,77 @@
 				$("#contentDiv").html("");
 				$("#dialogQuestionDiv").html("");
 				$("#dialogResponseDiv").html("");
-				$.ajax(url,{
-					type: 'GET',
-					dataType: 'xml',
-					success: function(data){
-						var json=xmlToJson(data);
-						if(typeof json["matches"]["error"] == 'undefined') {
-							//$("#contentDiv").html(phrase);
-							$("#info").text('✓ Phase 1 : No syntax Error');
-						} else {
-							var errors = json["matches"]["error"];
-							var arrayLength = errors.length;
-							var htmlvalue="<div class='table-wrapper'><table><thead><tr><th>msg</th><th>fromy</th><th>fromx</th><th>toy</th><th>tox</th><th>ruleId</th><th>subId</th><th>replacements</th><th>context</th><th>contextoffset</th><th>offset</th><th>errorlength</th><th>url</th><th>category</th><th>locqualityissuetype</th></tr></thead><tbody>";
-							if(errors.length>1) {
-								for (var i = 0; i < arrayLength; i++) {
-									htmlvalue+=processError(errors[i]["@attributes"]);
-								}
-							} else {
-								htmlvalue+=processError(errors["@attributes"]);
-							}
-							htmlvalue+="</tbody></table></div>";
-							$("#contentDiv").html(htmlvalue);
-							colorValue="orange";
-							$("#info").html('✗ Phase 1 : Syntax Error');
-						}
-						
-					},
-					error: function (request, status, err) {
-						colorValue="red";
-						$("#info").html('✗ Phase 1 : Language Tool Api Not Available');
-					},
-					complete: function () {
+				switch(phrase.toLowerCase()){
+					case "j'aime les pommes." :
+						$("#info").text('Moi aussi, mais j\'aime beaucoup les poires aussi.');
+						colorValue="#4BFF18";
 						blockquoteAnimation(colorValue);
 						infoAnimation('#info',colorValue);
-						if(colorValue=="#4BFF18") {
-							request2(phrase);
+						break;
+					case "ça va ?" :
+						$("#info").text('Je vais très bien, merci de demander.');
+						colorValue="#4BFF18";
+						blockquoteAnimation(colorValue);
+						infoAnimation('#info',colorValue);
+						break;
+					case "ca va ?" :
+						$("#info").text('Je vais très bien, merci de demander.');
+						colorValue="#4BFF18";
+						blockquoteAnimation(colorValue);
+						infoAnimation('#info',colorValue);
+						break;
+					case "tu vas bien ?" :
+						$("#info").text('Oui, je vais bien.');
+						colorValue="#4BFF18";
+						blockquoteAnimation(colorValue);
+						infoAnimation('#info',colorValue);
+						break;
+					case "je t'aime." :
+						$("#info").text('Moi aussi, tu es très gentil.');
+						colorValue="#4BFF18";
+						blockquoteAnimation(colorValue);
+						infoAnimation('#info',colorValue);
+						break;
+					default :
+						$.ajax(url,{
+						type: 'GET',
+						dataType: 'xml',
+						success: function(data){
+							var json=xmlToJson(data);
+							if(typeof json["matches"]["error"] == 'undefined') {
+								//$("#contentDiv").html(phrase);
+								$("#info").text('✓ Phase 1 : No syntax Error');
+							} else {
+								var errors = json["matches"]["error"];
+								var arrayLength = errors.length;
+								var htmlvalue="<div class='table-wrapper'><table><thead><tr><th>msg</th><th>fromy</th><th>fromx</th><th>toy</th><th>tox</th><th>ruleId</th><th>subId</th><th>replacements</th><th>context</th><th>contextoffset</th><th>offset</th><th>errorlength</th><th>url</th><th>category</th><th>locqualityissuetype</th></tr></thead><tbody>";
+								if(errors.length>1) {
+									for (var i = 0; i < arrayLength; i++) {
+										htmlvalue+=processError(errors[i]["@attributes"]);
+									}
+								} else {
+									htmlvalue+=processError(errors["@attributes"]);
+								}
+								htmlvalue+="</tbody></table></div>";
+								$("#contentDiv").html(htmlvalue);
+								colorValue="orange";
+								$("#info").html('✗ Phase 1 : Syntax Error');
+							}
+						},
+						error: function (request, status, err) {
+							colorValue="red";
+							$("#info").html('✗ Phase 1 : Language Tool Api Not Available');
+						},
+						complete: function () {
+							blockquoteAnimation(colorValue);
+							infoAnimation('#info',colorValue);
+							if(colorValue=="#4BFF18") {
+								request2(phrase);
+							}
 						}
-					}
-				});
+					});
+					break;
+				}
 			}
 
 			//Parser les mots clés des questions et en extraire le but
@@ -173,9 +206,6 @@
 							break;
 						case "quoi" :
 							info='quelque chose';
-							break;
-						case "est-ce-que" :
-							info='aucune idée';
 							break;
 						case "que" :
 							info='aucune idée';

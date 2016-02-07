@@ -176,9 +176,10 @@
 			//Parser les mots clés des questions et en extraire le but
 			function request2(phrase){
 				var partsArray = phrase.toLowerCase().split(' '),
+					lowerCasePhrase = phrase.toLowerCase(),
 					info="",
 					colorValue="#4BFF18";
-				for (word in partsArray){
+				/*for (word in partsArray){
 					if(info!="") {
 						break;
 					} else {
@@ -229,6 +230,36 @@
 							break;
 						}
 					}
+				}*/
+
+				if(lowerCasePhrase.indexOf('qui') > -1) {
+					info="abstract";
+				} else if (lowerCasePhrase.indexOf('quand est né') > -1) {
+					info="birthDate";
+				} else if (lowerCasePhrase.indexOf('où est né') > -1) {
+					info="birthPlace";
+				} else if (lowerCasePhrase.indexOf('quand est mort') > -1) {
+					info="deathDate";
+				} else if (lowerCasePhrase.indexOf('où est mort') > -1) {
+					info="deathPlace";
+				} else if (lowerCasePhrase.indexOf('quel genre') > -1) {
+					info="style";
+				} else if (lowerCasePhrase.indexOf('parents') > -1) {
+					if (lowerCasePhrase.indexOf('?') > -1) {
+						info="parent";
+					}
+				} else if (lowerCasePhrase.indexOf('enfant') > -1) {
+					if (lowerCasePhrase.indexOf('?') > -1) {
+						info="child";
+					}
+				} else if (lowerCasePhrase.indexOf('femme') > -1) {
+					if (lowerCasePhrase.indexOf('?') > -1) {
+						info="spouse";
+					}
+				} else if (lowerCasePhrase.indexOf('?') > -1) {
+					info="abstract";
+				} else {
+
 				}
 
 				if(info=="") {
@@ -238,12 +269,12 @@
 				
 				} else {
 					////writeAnimateDiv('<br>✓ Phase 2 : <i>'+info+'</i>',colorValue,"#info");
-					request3(phrase);
+					request3(phrase,info);
 				}
 			}
 
 			//Extraction des noms propres dans la requête
-			function request3(phrase){
+			function request3(phrase,info){
 				var url='https://api.dandelion.eu/datatxt/nex/v1/?lang=fr&text='+phrase+'&$app_id=f58ea0a1&$app_key=e4295dc8994ffe1ac73aba408cd931c4',
 					colorValue="#4BFF18",
 					label,resourceLabel;
@@ -259,7 +290,7 @@
 								resourceLabel=data["annotations"][i]["uri"].split("/").splice(-1);
 							}
 							////writeAnimateDiv('<br>✓ Phase 3 : <i>'+label+ '</i> detected',colorValue,"#info");
-							request4(phrase,"abstract",resourceLabel);
+							request4(phrase,info,resourceLabel);
 						} else {
 							colorValue="red";
 							//writeAnimateDiv('<br>✗ Phase 3 : '+arrayLength+' entit'+(arrayLength==0?'y':'ies'),colorValue,"#info");
@@ -283,9 +314,17 @@
 					dataType: 'json',
 					success: function(data){
 						
-						var response=data.results.bindings[0][propertyName].value;
-						console.log(data);
-						console.log(response);
+
+						var arrayLength = data.results.bindings.length,
+							response="";
+						for (var i = 0; i < arrayLength; i++) {
+							var value = data.results.bindings[i][propertyName].value;
+							if (value.indexOf('http') > -1) {
+								response+=value.split("/").splice(-1)+"<br>";
+							} else {
+								response+=value+"<br>";
+							}
+						}
 						a.value="";
 						$("#dialogQuestionDiv").html('<p style="color:#4BFF18"><i>'+phrase+'</i></hp>');
 						//TODO(plus d'une valeur)

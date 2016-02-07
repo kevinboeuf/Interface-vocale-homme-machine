@@ -105,93 +105,78 @@
 				}
 			}
 
-			//Analyse syntaxique de la requete
+			//Correction de la phrase
 			function request() {
-				var phrase=a.value,
-					url='https://languagetool.org:8081/?language=fr&disabled=FRENCH_WHITESPACE&text='+phrase,
-					colorValue="#4BFF18";
-				$('#info').css("float",'right');
-				$("#contentDiv").html("");
-				$("#dialogQuestionDiv").html("");
-				$("#dialogResponseDiv").html("");
+					var phrase=a.value,
+						url='https://languagetool.org:8081/?language=fr&disabled=FRENCH_WHITESPACE,UPPERCASE_SENTENCE_START	&text='+phrase,
+						colorValue="#4BFF18";
+
+					//$('#info').css("float",'right');
+					$("#contentDiv").html("");
+					$("#dialogQuestionDiv").html("");
+					$("#dialogResponseDiv").html("");
+				
+				$.ajax(url,{
+					type: 'GET',
+					dataType: 'xml',
+					success: function(data){
+						var json=xmlToJson(data);
+						if(typeof json["matches"]["error"] == 'undefined') {
+							//$("#contentDiv").html(phrase);
+							////writeAnimateDiv('✓ Phase 1 : No syntax Error',colorValue,"#info");
+							request1(phrase);
+						} else {
+							var errors = json["matches"]["error"];
+							var arrayLength = errors.length;
+							var htmlvalue="<div class='table-wrapper'><table><thead><tr><th>msg</th><th>fromy</th><th>fromx</th><th>toy</th><th>tox</th><th>ruleId</th><th>subId</th><th>replacements</th><th>context</th><th>contextoffset</th><th>offset</th><th>errorlength</th><th>url</th><th>category</th><th>locqualityissuetype</th></tr></thead><tbody>";
+							if(errors.length>1) {
+								for (var i = 0; i < arrayLength; i++) {
+									htmlvalue+=processError(errors[i]["@attributes"]);
+								}
+							} else {
+								htmlvalue+=processError(errors["@attributes"]);
+							}
+							htmlvalue+="</tbody></table></div>";
+							colorValue="red";
+							//$("#contentDiv").html(htmlvalue);
+							//writeAnimateDiv('✗ Phase 1 : Syntax Error',colorValue,"#info");
+							overwriteAnimateDiv("Je n'ai pas compris votre phrase.",colorValue,"#dialogResponseDiv");
+						}
+					},
+					error: function (request, status, err) {
+						colorValue="red";
+						writeAnimateDiv('✗ Phase 1 : Language Tool Api Not Available',colorValue,"#info");
+					}
+				});
+			}
+
+			function request1(phrase) {
+				var colorValue='#4BFF18',
+					divValue='#dialogResponseDiv'
+
 				switch(phrase.toLowerCase()){
 					case "j'aime les pommes." :
-						$("#info").text('Moi aussi, mais j\'aime beaucoup les poires aussi.');
-						colorValue="#4BFF18";
-						blockquoteAnimation(colorValue);
-						infoAnimation('#info',colorValue);
+						overwriteAnimateDiv('Moi aussi, mais j\'aime beaucoup les poires aussi.',colorValue,divValue);
 						break;
 					case "ça va ?" :
-						$("#info").text('Je vais très bien, merci de demander.');
-						colorValue="#4BFF18";
-						blockquoteAnimation(colorValue);
-						infoAnimation('#info',colorValue);
-						break;
 					case "ca va ?" :
-						$("#info").text('Je vais très bien, merci de demander.');
-						colorValue="#4BFF18";
-						blockquoteAnimation(colorValue);
-						infoAnimation('#info',colorValue);
+						overwriteAnimateDiv('Je vais très bien, merci de demander.',colorValue,divValue);
 						break;
 					case "tu vas bien ?" :
-						$("#info").text('Oui, je vais bien.');
-						colorValue="#4BFF18";
-						blockquoteAnimation(colorValue);
-						infoAnimation('#info',colorValue);
+						overwriteAnimateDiv('Oui, je vais bien.',colorValue,divValue);
 						break;
 					case "je t'aime." :
-						$("#info").text('Moi aussi, tu es très gentil.');
-						colorValue="#4BFF18";
-						blockquoteAnimation(colorValue);
-						infoAnimation('#info',colorValue);
+						overwriteAnimateDiv('Moi aussi, tu es très gentil.',colorValue,divValue);
 						break;
-					default :
-						$.ajax(url,{
-						type: 'GET',
-						dataType: 'xml',
-						success: function(data){
-							var json=xmlToJson(data);
-							if(typeof json["matches"]["error"] == 'undefined') {
-								//$("#contentDiv").html(phrase);
-								$("#info").text('✓ Phase 1 : No syntax Error');
-							} else {
-								var errors = json["matches"]["error"];
-								var arrayLength = errors.length;
-								var htmlvalue="<div class='table-wrapper'><table><thead><tr><th>msg</th><th>fromy</th><th>fromx</th><th>toy</th><th>tox</th><th>ruleId</th><th>subId</th><th>replacements</th><th>context</th><th>contextoffset</th><th>offset</th><th>errorlength</th><th>url</th><th>category</th><th>locqualityissuetype</th></tr></thead><tbody>";
-								if(errors.length>1) {
-									for (var i = 0; i < arrayLength; i++) {
-										htmlvalue+=processError(errors[i]["@attributes"]);
-									}
-								} else {
-									htmlvalue+=processError(errors["@attributes"]);
-								}
-								htmlvalue+="</tbody></table></div>";
-								$("#contentDiv").html(htmlvalue);
-								colorValue="orange";
-								$("#info").html('✗ Phase 1 : Syntax Error');
-							}
-						},
-						error: function (request, status, err) {
-							colorValue="red";
-							$("#info").html('✗ Phase 1 : Language Tool Api Not Available');
-						},
-						complete: function () {
-							blockquoteAnimation(colorValue);
-							infoAnimation('#info',colorValue);
-							if(colorValue=="#4BFF18") {
-								request2(phrase);
-							}
-						}
-					});
-					break;
+					default : request2(phrase);
 				}
 			}
 
+
 			//Parser les mots clés des questions et en extraire le but
 			function request2(phrase){
-				var partsArray = phrase.toLowerCase().split(' ');
-				console.log(partsArray);
-				var info="",
+				var partsArray = phrase.toLowerCase().split(' '),
+					info="",
 					colorValue="#4BFF18";
 				for (word in partsArray){
 					if(info!="") {
@@ -248,14 +233,11 @@
 
 				if(info=="") {
 					colorValue="red";
-
-					$("#info").html($("#info").html()+'<br>✗ Phase 2');
-					blockquoteAnimation(colorValue);
-					infoAnimation('#info',colorValue);
+					//writeAnimateDiv('<br>✗ Phase 2',colorValue,"#info");
+					overwriteAnimateDiv("Votre phrase n'est pas une question, je n'ai pas compris.",colorValue,"#dialogResponseDiv");
+				
 				} else {
-					$("#info").html($("#info").html()+'<br>✓ Phase 2 : <i>'+info+'</i>');
-					blockquoteAnimation(colorValue);
-					infoAnimation('#info',colorValue);
+					////writeAnimateDiv('<br>✓ Phase 2 : <i>'+info+'</i>',colorValue,"#info");
 					request3(phrase);
 				}
 			}
@@ -271,32 +253,22 @@
 					success: function(data){
 						console.log(data);
 						var arrayLength=data["annotations"]["length"];
-							//htmlvalue=""
 						if(arrayLength==1) {
-							//htmlvalue="<b>Label :<b><br>";
 							for (var i = 0; i < arrayLength; i++) {
 								label=data["annotations"][i]["label"];
 								resourceLabel=data["annotations"][i]["uri"].split("/").splice(-1);
-								//htmlvalue+=label+"<br>";
 							}
-							//$("#contentDiv").html(htmlvalue);
-							$("#info").html($("#info").html()+'<br>✓ Phase 3 : <i>'+label+ '</i> detected');
+							////writeAnimateDiv('<br>✓ Phase 3 : <i>'+label+ '</i> detected',colorValue,"#info");
+							request4(phrase,"abstract",resourceLabel);
 						} else {
-							colorValue="orange";
-							$("#info").html($("#info").html()+'<br>✗ Phase 3 : '+arrayLength+' entit'+(arrayLength==0?'y':'ies'));
+							colorValue="red";
+							//writeAnimateDiv('<br>✗ Phase 3 : '+arrayLength+' entit'+(arrayLength==0?'y':'ies'),colorValue,"#info");
+							overwriteAnimateDiv((arrayLength==0?'Je ne comprends pas le sujet de votre question.':'Vous parlez de plusieurs concepts, je ne saisis pas le sujet de votre question.'),colorValue,"#dialogResponseDiv");
 						}
 					},
 					error: function (request, status, err) {
 						colorValue="red";
-						$("#info").html($("#info").html()+'<br>✗ Phase 3 : Dandelion Api Not Available');
-					},
-					complete: function() {
-						blockquoteAnimation(colorValue);
-						infoAnimation('#info',colorValue);
-						if(colorValue=="#4BFF18") {
-							request4(phrase,"birthDate",resourceLabel);
-							//TODO traitement sur la phrase pour extraire une propertyName
-						}
+						writeAnimateDiv('<br>✗ Phase 3 : Dandelion Api Not Available',colorValue,"#info");
 					}
 				});
 
@@ -304,31 +276,40 @@
 
 			//Récupération de l'information utile sur Dbpedia pour la formulation d'une réponse
 			function request4(phrase,propertyName,resourceLabel){
-				var url='http://fr.dbpedia.org/sparql?query=select distinct ?'+propertyName+' where {<http://fr.dbpedia.org/resource/'+resourceLabel+'> dbpedia-owl:'+propertyName+' ?'+propertyName+'} LIMIT 100&format=HTML',
+				var url='http://fr.dbpedia.org/sparql?query=select distinct ?'+propertyName+' where {<http://fr.dbpedia.org/resource/'+resourceLabel+'> dbpedia-owl:'+propertyName+' ?'+propertyName+'} LIMIT 100&format=application%2Fsparql-results%2Bjson',
 					colorValue="#4BFF18";
 				$.ajax(url,{
 					type: 'GET',
-					dataType: 'HTML',
+					dataType: 'json',
 					success: function(data){
+						
+						var response=data.results.bindings[0][propertyName].value;
 						console.log(data);
+						console.log(response);
 						a.value="";
 						$("#dialogQuestionDiv").html('<p style="color:#4BFF18"><i>'+phrase+'</i></hp>');
 						//TODO(plus d'une valeur)
-						$("#dialogResponseDiv").html(data);
-						$("#info").html($("#info").html()+'<br>✓ Phase 4 : Request succeeded');
+						$("#dialogResponseDiv").html('<p style="color:white">'+(response.length<400?response:response.substring(0,400)+"...")+'</hp>');
+						////writeAnimateDiv('<br>✓ Phase 4 : Request succeeded',colorValue,"#info");
 					},
 					error: function (request, status, err) {
 						colorValue="red";
-						$("#info").html($("#info").html()+'<br>✗ Phase 4 : SPARQL Endpoint Not Available');
-					},
-					complete: function() {
-						blockquoteAnimation(colorValue);
-						infoAnimation('#info',colorValue);
+						writeAnimateDiv('<br>✗ Phase 4 : SPARQL Endpoint Not Available',colorValue,"#info");
 					}
 				});
 			}
 
-			
+			function overwriteAnimateDiv(htmlcode,colorValue,divValue) {
+				$(divValue).html(htmlcode);
+				blockquoteAnimation(colorValue);
+				infoAnimation(divValue,colorValue);
+			}
+
+			function writeAnimateDiv(htmlcode,colorValue,divValue) {
+				$(divValue).html($(divValue).html()+htmlcode);
+				blockquoteAnimation(colorValue);
+				infoAnimation(divValue,colorValue);
+			}
 	
 			function blockquoteAnimation(colorValue) {
 				$('#blockquoteID').stop();
@@ -336,11 +317,11 @@
 				$('#blockquoteID').animate({'borderColor':'white'},2000);
 			}
 
-			function infoAnimation(infoId,colorValue) {
-				$(infoId).stop();
-				$(infoId).css("color",colorValue);
-				$(infoId).animate({'color':'black'},7000, function() {
-					$(infoId).text(".");
+			function infoAnimation(divValue,colorValue) {
+				$(divValue).stop();
+				$(divValue).css("color",colorValue);
+				$(divValue).animate({'color':'black'},7000, function() {
+					$(divValue).text(" ");
 				});
 			}
 

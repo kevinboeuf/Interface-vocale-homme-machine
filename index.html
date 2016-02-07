@@ -240,8 +240,6 @@
 					dataType: 'json',
 					success: function(data){
 						console.log(data);
-						
-						
 						var arrayLength=data["annotations"]["length"];
 							//htmlvalue=""
 						if(arrayLength==1) {
@@ -267,7 +265,7 @@
 						infoAnimation('#info',colorValue);
 						if(colorValue=="#4BFF18") {
 							request4(phrase,"birthDate",resourceLabel);
-							//TODO traitement sur la phrase pour entraire une propertyName
+							//TODO traitement sur la phrase pour extraire une propertyName
 						}
 					}
 				});

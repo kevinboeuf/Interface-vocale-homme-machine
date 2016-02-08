@@ -61,6 +61,7 @@
 
 			var a=document.getElementById('questionID'), 
 				b=document.getElementById('envoyerID');
+				context="";
 
 			//Lorsqu'on appuie sur entrée
 			a.onkeydown = function(event) {
@@ -178,7 +179,8 @@
 				var partsArray = phrase.toLowerCase().split(' '),
 					lowerCasePhrase = phrase.toLowerCase(),
 					info="",
-					colorValue="#4BFF18";
+					colorValue="#4BFF18",
+					contextReference=false;
 				/*for (word in partsArray){
 					if(info!="") {
 						break;
@@ -232,14 +234,18 @@
 					}
 				}*/
 
-				if (lowerCasePhrase.indexOf('quand est né') > -1) {
-					info="birthDate";
-				} else if (lowerCasePhrase.indexOf('où est né') > -1) {
-					info="birthPlace";
-				} else if (lowerCasePhrase.indexOf('quand est mort') > -1) {
-					info="deathDate";
-				} else if (lowerCasePhrase.indexOf('où est mort') > -1) {
-					info="deathPlace";
+				if (lowerCasePhrase.indexOf('quand') > -1) {
+					if (lowerCasePhrase.indexOf('né') > -1) {
+						info="birthDate";
+					} else if (lowerCasePhrase.indexOf('mort') > -1) {
+						info="deathDate";
+					}
+				} else if (lowerCasePhrase.indexOf('où') > -1) {
+					if (lowerCasePhrase.indexOf('né') > -1) {
+						info="birthPlace";
+					}  else if (lowerCasePhrase.indexOf('mort') > -1) {
+						info="deathPlace";
+					}
 				} else if (lowerCasePhrase.indexOf('quel genre') > -1) {
 					info="style";
 				} else if (lowerCasePhrase.indexOf('parents') > -1) {
@@ -258,9 +264,20 @@
 					info="abstract";
 				} else if (lowerCasePhrase.indexOf('?') > -1) {
 					info="abstract";
-				} else {
+				} 
 
+				for (word in partsArray){
+					if(context=="" || (context!="" && contextReference)) {
+						break;
+					} else {
+						switch (partsArray[word]){
+							case "il" :case "elle":case "est-il" :case "est-elle":
+							contextReference=true;break;
+							default:
+						}
+					}
 				}
+
 
 				if(info=="") {
 					colorValue="red";
@@ -269,7 +286,11 @@
 				
 				} else {
 					////writeAnimateDiv('<br>✓ Phase 2 : <i>'+info+'</i>',colorValue,"#info");
-					request3(phrase,info);
+					if(contextReference) {
+						request4(phrase,info,context);
+					} else {
+						request3(phrase,info);
+					}
 				}
 			}
 
@@ -277,7 +298,7 @@
 			function request3(phrase,info){
 				var url='https://api.dandelion.eu/datatxt/nex/v1/?lang=fr&text='+phrase+'&$app_id=f58ea0a1&$app_key=e4295dc8994ffe1ac73aba408cd931c4',
 					colorValue="#4BFF18",
-					label,resourceLabel;
+					label;
 				$.ajax(url,{
 					type: 'GET',
 					dataType: 'json',
@@ -286,11 +307,11 @@
 						var arrayLength=data["annotations"]["length"];
 						if(arrayLength==1) {
 							for (var i = 0; i < arrayLength; i++) {
-								label=data["annotations"][i]["label"];
-								resourceLabel=data["annotations"][i]["uri"].split("/").splice(-1);
+								//label=data["annotations"][i]["label"];
+								context=data["annotations"][i]["uri"].split("/").splice(-1);
 							}
 							////writeAnimateDiv('<br>✓ Phase 3 : <i>'+label+ '</i> detected',colorValue,"#info");
-							request4(phrase,info,resourceLabel);
+							request4(phrase,info,context);
 						} else {
 							colorValue="red";
 							//writeAnimateDiv('<br>✗ Phase 3 : '+arrayLength+' entit'+(arrayLength==0?'y':'ies'),colorValue,"#info");
